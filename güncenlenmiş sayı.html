@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sayılar Sürükle Bırak</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f4f8;
+            color: #333;
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            color: #5a5a5a;
+        }
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        .item, .dropzone {
+            width: 100px;
+            height: 50px;
+            margin: 10px;
+            border-radius: 8px;
+            text-align: center;
+            line-height: 50px;
+            transition: background-color 0.3s;
+        }
+        .item {
+            background-color: #4caf50;
+            color: white;
+            cursor: grab;
+        }
+        .dropzone {
+            border: 2px dashed #4caf50;
+            background-color: white;
+        }
+        .dropzone:hover {
+            background-color: #e8f5e9;
+        }
+        @media (max-width: 600px) {
+            .item, .dropzone {
+                width: 80px;
+                height: 40px;
+                line-height: 40px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Sayılar Sürükle Bırak</h1>
+    <div class="container" id="numbers"></div>
+    <div class="container" id="english"></div>
+
+    <script>
+        const correctSound = new Audio('correct.mp3');
+        const wrongSound = new Audio('wrong.mp3');
+
+        const numbers = [
+            { tr: '0', en: 'zero' }, { tr: '1', en: 'one' }, { tr: '2', en: 'two' },
+            { tr: '3', en: 'three' }, { tr: '4', en: 'four' }, { tr: '5', en: 'five' },
+            { tr: '6', en: 'six' }, { tr: '7', en: 'seven' }, { tr: '8', en: 'eight' },
+            { tr: '9', en: 'nine' }, { tr: '10', en: 'ten' }, { tr: '11', en: 'eleven' },
+            { tr: '12', en: 'twelve' }, { tr: '13', en: 'thirteen' }, { tr: '14', en: 'fourteen' },
+            { tr: '15', en: 'fifteen' }, { tr: '16', en: 'sixteen' }, { tr: '17', en: 'seventeen' },
+            { tr: '18', en: 'eighteen' }, { tr: '19', en: 'nineteen' }, { tr: '20', en: 'twenty' },
+            { tr: '21', en: 'twenty-one' }, { tr: '22', en: 'twenty-two' }, { tr: '23', en: 'twenty-three' },
+            { tr: '24', en: 'twenty-four' }, { tr: '25', en: 'twenty-five' }, { tr: '26', en: 'twenty-six' },
+            { tr: '27', en: 'twenty-seven' }, { tr: '28', en: 'twenty-eight' }, { tr: '29', en: 'twenty-nine' },
+            { tr: '30', en: 'thirty' }, { tr: '31', en: 'thirty-one' }, { tr: '32', en: 'thirty-two' },
+            { tr: '33', en: 'thirty-three' }, { tr: '34', en: 'thirty-four' }, { tr: '35', en: 'thirty-five' },
+            { tr: '36', en: 'thirty-six' }, { tr: '37', en: 'thirty-seven' }, { tr: '38', en: 'thirty-eight' },
+            { tr: '39', en: 'thirty-nine' }, { tr: '40', en: 'forty' }, { tr: '41', en: 'forty-one' },
+            { tr: '42', en: 'forty-two' }, { tr: '43', en: 'forty-three' }, { tr: '44', en: 'forty-four' },
+            { tr: '45', en: 'forty-five' }, { tr: '46', en: 'forty-six' }, { tr: '47', en: 'forty-seven' },
+            { tr: '48', en: 'forty-eight' }, { tr: '49', en: 'forty-nine' }, { tr: '50', en: 'fifty' }
+        ];
+
+        const numbersContainer = document.getElementById('numbers');
+        const englishContainer = document.getElementById('english');
+
+        numbers.forEach((number, index) => {
+            const numberDiv = document.createElement('div');
+            numberDiv.classList.add('item');
+            numberDiv.draggable = true;
+            numberDiv.textContent = number.tr;
+            numberDiv.dataset.index = index;
+            numberDiv.addEventListener('dragstart', dragStart);
+            numberDiv.addEventListener('touchstart', touchStart); // Dokunmatik destek için
+            numbersContainer.appendChild(numberDiv);
+
+            const englishDiv = document.createElement('div');
+            englishDiv.classList.add('dropzone');
+            englishDiv.textContent = number.en;
+            englishDiv.addEventListener('dragover', dragOver);
+            englishDiv.addEventListener('drop', drop);
+            englishDiv.addEventListener('touchmove', touchMove); // Dokunmatik destek için
+            englishDiv.addEventListener('touchend', touchEnd);   // Dokunmatik destek için
+            englishContainer.appendChild(englishDiv);
+        });
+
+        function dragStart(event) {
+            event.dataTransfer.setData('text', event.target.textContent);
+            event.dataTransfer.setData('index', event.target.dataset.index);
+        }
+
+        function dragOver(event) {
+            event.preventDefault();
+        }
+
+        function drop(event) {
+            event.preventDefault();
+            const data = event.dataTransfer.getData('text');
+            const index = event.dataTransfer.getData('index');
+            const correctAnswer = numbers[index].en;
+
+            if (event.target.textContent === correctAnswer) {
+                event.target.textContent = data;
+                event.target.style.backgroundColor = 'lightgreen';
+                correctSound.play();
+            } else {
+                event.target.style.backgroundColor = 'lightcoral';
+                wrongSound.play();
+                setTimeout(() => {
+                    event.target.style.backgroundColor = '';
+                    event.target.textContent = correctAnswer;
+                }, 1000);
+            }
+        }
+
+        // Dokunmatik olaylar
+        function touchStart(event) {
+            event.dataTransfer = {
+                setData: function(type, value) {
+                    this[type] = value;
+                },
+                getData: function(type) {
+                    return this[type];
+                }
+            };
+            dragStart(event);
+        }
+
+        function touchMove(event) {
+            event.preventDefault();
+        }
+
+        function touchEnd(event) {
+            drop(event);
+        }
+    </script>
+</body>
+</html>

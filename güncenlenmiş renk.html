@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Renkler Sürükle Bırak</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f4f8;
+            color: #333;
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            color: #5a5a5a;
+        }
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        .item, .dropzone {
+            width: 100px;
+            height: 50px;
+            margin: 10px;
+            border-radius: 8px;
+            text-align: center;
+            line-height: 50px;
+            transition: background-color 0.3s;
+        }
+        .item {
+            cursor: grab;
+        }
+        .dropzone {
+            border: 2px dashed #4caf50;
+            background-color: white;
+        }
+        .dropzone:hover {
+            background-color: #e8f5e9;
+        }
+        @media (max-width: 600px) {
+            .item, .dropzone {
+                width: 80px;
+                height: 40px;
+                line-height: 40px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Renkler Sürükle Bırak</h1>
+    <div class="container" id="colors"></div>
+    <div class="container" id="colorNames"></div>
+
+    <script>
+        const correctSound = new Audio('correct.mp3');
+        const wrongSound = new Audio('wrong.mp3');
+
+        const colors = [
+            { name: 'Kırmızı', hex: '#ff0000' },
+            { name: 'Yeşil', hex: '#00ff00' },
+            { name: 'Mavi', hex: '#0000ff' },
+            { name: 'Sarı', hex: '#ffff00' },
+            { name: 'Turuncu', hex: '#ffa500' },
+            { name: 'Mor', hex: '#800080' }
+        ];
+
+        const colorsContainer = document.getElementById('colors');
+        const colorNamesContainer = document.getElementById('colorNames');
+
+        colors.forEach((color, index) => {
+            const colorDiv = document.createElement('div');
+            colorDiv.classList.add('item');
+            colorDiv.style.backgroundColor = color.hex;
+            colorDiv.draggable = true;
+            colorDiv.textContent = color.name;
+            colorDiv.dataset.index = index;
+            colorDiv.addEventListener('dragstart', dragStart);
+            colorDiv.addEventListener('touchstart', touchStart);
+            colorDiv.addEventListener('touchmove', touchMove);
+            colorDiv.addEventListener('touchend', touchEnd);
+            colorsContainer.appendChild(colorDiv);
+
+            const colorNameDiv = document.createElement('div');
+            colorNameDiv.classList.add('dropzone');
+            colorNameDiv.textContent = color.name;
+            colorNameDiv.addEventListener('dragover', dragOver);
+            colorNameDiv.addEventListener('drop', drop);
+            colorNameDiv.addEventListener('touchend', dropTouch);
+            colorNamesContainer.appendChild(colorNameDiv);
+        });
+
+        function dragStart(event) {
+            event.dataTransfer.setData('text', event.target.textContent);
+            event.dataTransfer.setData('index', event.target.dataset.index);
+        }
+
+        function dragOver(event) {
+            event.preventDefault();
+        }
+
+        function drop(event) {
+            event.preventDefault();
+            const data = event.dataTransfer.getData('text');
+            const index = event.dataTransfer.getData('index');
+            const correctName = colors[index].name;
+
+            if (event.target.textContent === correctName) {
+                event.target.textContent = data;
+                event.target.style.backgroundColor = colors[index].hex;
+                correctSound.play();
+            } else {
+                event.target.style.backgroundColor = 'lightcoral';
+                wrongSound.play();
+                setTimeout(() => {
+                    event.target.style.backgroundColor = '';
+                    event.target.textContent = correctName;
+                }, 1000);
+            }
+        }
+
+        // Dokunmatik olaylar
+        function touchStart(event) {
+            event.dataTransfer = {};
+            event.dataTransfer.setData = function(type, value) {
+                this[type] = value;
+            };
+            event.dataTransfer.getData = function(type) {
+                return this[type];
+            };
+            dragStart(event);
+        }
+
+        function touchMove(event) {
+            const touch = event.touches[0];
+            const element = document.elementFromPoint(touch.clientX, touch.clientY);
+            if (element && element.classList.contains('dropzone')) {
+                element.style.backgroundColor = '#e8f5e9';
+            }
+        }
+
+        function touchEnd(event) {
+            const touch = event.changedTouches[0];
+            const element = document.elementFromPoint(touch.clientX, touch.clientY);
+            if (element && element.classList.contains('dropzone')) {
+                dropTouch({ target: element, dataTransfer: event.dataTransfer });
+            }
+        }
+
+        function dropTouch(event) {
+            const data = event.dataTransfer.getData('text');
+            const index = event.dataTransfer.getData('index');
+            const correctName = colors[index].name;
+
+            if (event.target.textContent === correctName) {
+                event.target.textContent = data;
+                event.target.style.backgroundColor = colors[index].hex;
+                correctSound.play();
+            } else {
+                event.target.style.backgroundColor = 'lightcoral';
+                wrongSound.play();
+                setTimeout(() => {
+                    event.target.style.backgroundColor = '';
+                    event.target.textContent = correctName;
+                }, 1000);
+            }
+        }
+    </script>
+</body>
+</html>
